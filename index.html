@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Caracteristicile tehnice ale lentilelor folosite pentru ochelari de corecție și protecție</title>
+<title>AVVERO | CURS E-Learning</title>
 <style>
 :root{--bg:#050712;--text:#f8fbff;--muted:#b8c4df;--line:rgba(255,255,255,.16);--cyan:#42d8ff;--violet:#a855f7;--green:#54e98b;--gold:#ffd166;--rose:#ff6b8a;--shadow:0 32px 90px rgba(0,0,0,.50)}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -507,6 +507,26 @@ h1{margin:0;font-size:clamp(38px,5vw,74px);line-height:.96;letter-spacing:-.055e
   justify-content:center!important;
 }
 
+/* Modal parolă editare, liquid glass */
+.edit-pass-overlay{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;background:rgba(2,5,16,.50);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);padding:22px}
+.edit-pass-overlay.open{display:flex}
+.edit-pass-card{width:min(440px,92vw);border-radius:30px;border:1px solid rgba(255,255,255,.20);background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.06));box-shadow:0 34px 100px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.18);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);padding:26px;position:relative;overflow:hidden;transform:translateY(12px) scale(.96);opacity:0;animation:editPassPop .24s ease forwards}
+.edit-pass-card:before{content:"";position:absolute;inset:-1px;background:linear-gradient(120deg,rgba(66,216,255,.22),transparent 32%,rgba(168,85,247,.18));pointer-events:none}
+.edit-pass-card:after{content:"";position:absolute;top:-45%;left:-55%;width:44%;height:190%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transform:rotate(18deg);animation:editPassShine 1.05s ease .1s}
+.edit-pass-card>*{position:relative}
+@keyframes editPassPop{to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes editPassShine{0%{left:-55%;opacity:0}25%{opacity:.78}100%{left:125%;opacity:0}}
+.edit-pass-title{margin:0 0 8px;font-size:24px;line-height:1.1;letter-spacing:-.03em;color:#fff}
+.edit-pass-subtitle{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.35}
+.edit-pass-input{width:100%;height:50px;border-radius:16px;border:1px solid rgba(66,216,255,.34);background:rgba(5,7,18,.46);color:#fff;font-size:18px;padding:0 15px;outline:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+.edit-pass-input:focus{border-color:rgba(66,216,255,.82);box-shadow:0 0 0 4px rgba(66,216,255,.11),inset 0 0 0 1px rgba(255,255,255,.08)}
+.edit-pass-error{min-height:18px;margin:9px 0 0;color:#ff9aae;font-size:13px}
+.edit-pass-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.edit-pass-actions button{height:44px;border-radius:15px;border:1px solid rgba(255,255,255,.18);color:#fff;cursor:pointer;padding:0 16px;font-weight:800;background:rgba(255,255,255,.10);backdrop-filter:blur(14px)}
+.edit-pass-actions button:hover{background:rgba(255,255,255,.16)}
+.edit-pass-actions .confirm{background:linear-gradient(135deg,rgba(66,216,255,.34),rgba(168,85,247,.32));border-color:rgba(66,216,255,.48)}
+.edit-pass-actions .confirm:hover{box-shadow:0 14px 42px rgba(66,216,255,.16)}
+
 </style>
 </head>
 <body>
@@ -524,18 +544,24 @@ h1{margin:0;font-size:clamp(38px,5vw,74px);line-height:.96;letter-spacing:-.055e
 <section class="slide"><div class="topline"><div class="brand"><div class="brand-mark"></div><span>Final</span></div><div class="counter">10 / 10</div></div><div class="content"><div><h1>Concluzii</h1><p class="subtitle"><span class="accent">Nu există o lentilă perfectă pentru toți.</span><br/>Există lentila potrivită pentru fiecare pacient.</p></div><div class="panel"><ul class="bullets"><li>Materialul influențează greutatea și rezistența.</li><li>Indicele influențează grosimea.</li><li>Geometria influențează calitatea imaginii.</li><li>Tratamentele cresc confortul și durabilitatea.</li><li>Recomandarea corectă combină date tehnice și nevoi reale.</li></ul></div></div><div class="footer"><span>Caracteristicile tehnice ale lentilelor oftalmice</span><span>Mulțumesc</span></div></section>
 </div>
 <div class="modal" id="matModal"><button class="close" id="closeModal">×</button><div class="modal-card" id="modalCard"></div></div>
+<div class="edit-pass-overlay" id="editPassOverlay" aria-hidden="true"><div class="edit-pass-card" role="dialog" aria-modal="true" aria-labelledby="editPassTitle"><h2 class="edit-pass-title" id="editPassTitle">Acces editare</h2><p class="edit-pass-subtitle">Introdu parola pentru a activa editarea.</p><input class="edit-pass-input" id="editPassInput" type="password" autocomplete="off" placeholder="Parolă"/><div class="edit-pass-error" id="editPassError"></div><div class="edit-pass-actions"><button type="button" id="editPassCancel">Anulează</button><button type="button" class="confirm" id="editPassConfirm">Continuă</button></div></div></div>
 <div class="progress"><span id="progress"></span></div><div class="controls"><button class="edit-toggle" id="editToggle" title="Editare">✎</button><div class="nav"><button id="prev">‹</button><button id="home">⌂</button><button id="next">›</button></div></div><div class="save-toast" id="saveToast">Salvat</div><div class="hint">Taste: ← → Space Home F. Pe mobil poți glisa.</div>
 <script>
 const slides=[...document.querySelectorAll('.slide')];
 const progress=document.getElementById('progress');
 const editToggle=document.getElementById('editToggle');
+const editPassOverlay=document.getElementById('editPassOverlay');
+const editPassInput=document.getElementById('editPassInput');
+const editPassError=document.getElementById('editPassError');
+const editPassCancel=document.getElementById('editPassCancel');
+const editPassConfirm=document.getElementById('editPassConfirm');
 const saveToast=document.getElementById('saveToast');
 let current=0;
 let editMode=false;
 let currentIdx=0;
-const CLEAN_KEY='lentileDeckV8_manual_save_clean';
+const CLEAN_KEY='avveroCursEditStateV12';
 const DYNAMIC_KEY=CLEAN_KEY+'_dynamic';
-const OLD_KEYS=['lentileDeckV7FinalFixedNoCorruptState','prezentare_autosave_v1','prezentare_html_editari_v1','slide_6_10_text_autosave_v1','prezentare_material_popup_autosave_v1'];
+const OLD_KEYS=['lentileDeckV7FinalFixedNoCorruptState','prezentare_autosave_v1','prezentare_html_editari_v1','slide_6_10_text_autosave_v1','prezentare_material_popup_autosave_v1','lentileDeckV8_manual_save_clean','lentileDeckV8_manual_save_clean_dynamic'];
 OLD_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
 
 const materials=[
@@ -566,25 +592,91 @@ function updateIdxDataFromDom(){const d=idxData[currentIdx];if(!d)return;d.n=el.
 function loadDynamicState(){try{const s=JSON.parse(localStorage.getItem(DYNAMIC_KEY)||'{}')||{};if(Array.isArray(s.idxData)){s.idxData.forEach((d,i)=>{if(idxData[i])Object.assign(idxData[i],d);});}}catch(e){}}
 function saveDynamicState(){updateIdxDataFromDom();try{localStorage.setItem(DYNAMIC_KEY,JSON.stringify({idxData}));}catch(e){}}
 function setIdx(i){currentIdx=i;const d=idxData[i];tabs.forEach((b,j)=>{b.classList.toggle('active',j===i);if(idxData[j])b.textContent=idxData[j].n;});el.num.textContent=d.n;el.text.textContent=d.text;el.pct.textContent=d.thin+'%';el.bar.style.width=d.thin+'%';el.diop.textContent=d.diop;el.frame.textContent=d.frame;el.mount.textContent=d.mount;el.care.textContent=d.care;prepareEditable();}
-tabs.forEach(b=>b.onclick=()=>{if(!editMode){updateIdxDataFromDom();setIdx(+b.dataset.i)}});
+tabs.forEach(b=>b.onclick=()=>{updateIdxDataFromDom();setIdx(+b.dataset.i);});
 
-function textTargets(){
-  return [...document.querySelectorAll('.slide h1,.slide h2,.slide h3,.slide h4,.slide p,.slide li,.slide span,.slide strong,.slide b,.slide small,.slide .spec,.slide .tag,.slide .p5-caption,.modal-card h1,.modal-card h2,.modal-card h3,.modal-card p,.modal-card span,.modal-card strong,.modal-card b')]
-    .filter(el=>!el.closest('.nav')&&!el.closest('#editToggle')&&!el.closest('#saveToast')&&!el.closest('.progress')&&!el.closest('#idxTabs')&&!el.closest('.modal-card')&&!el.classList.contains('counter')&&!['idxNumber','idxText','thinPct','idxDiop','idxFrame','idxMount','idxCare'].includes(el.id));
+function baseTextTargets(){
+  const selector='.slide h1,.slide h2,.slide h3,.slide h4,.slide p,.slide li,.slide span,.slide strong,.slide b,.slide small,.slide .spec,.slide .tag,.slide .p5-caption';
+  const candidates=[...document.querySelectorAll(selector)].filter(el=>
+    !el.closest('.controls') &&
+    !el.closest('.nav') &&
+    !el.closest('#saveToast') &&
+    !el.closest('.progress') &&
+    !el.closest('#idxTabs') &&
+    !el.classList.contains('counter') &&
+    !['idxNumber','idxText','thinPct','idxDiop','idxFrame','idxMount','idxCare'].includes(el.id)
+  );
+  const set=new Set(candidates);
+  return candidates.filter(el=>{
+    let parent=el.parentElement;
+    while(parent){
+      if(set.has(parent)) return false;
+      parent=parent.parentElement;
+    }
+    return true;
+  });
+}
+function idxTextTargets(){
+  return [el.num,el.text,el.pct,el.diop,el.frame,el.mount,el.care].filter(Boolean);
+}
+function editableTargets(){
+  return [...baseTextTargets(),...idxTextTargets()];
 }
 function makeKey(el){
-  if(!el.dataset.editKey){el.dataset.editKey='e'+textTargets().indexOf(el);}
+  if(!el.dataset.editKey){
+    const slide=el.closest('.slide');
+    const slideIndex=slide?[...slides].indexOf(slide)+1:0;
+    const local=[...document.querySelectorAll('.slide h1,.slide h2,.slide h3,.slide h4,.slide p,.slide li,.slide span,.slide strong,.slide b,.slide small,.slide .spec,.slide .tag,.slide .p5-caption')].indexOf(el);
+    el.dataset.editKey='s'+slideIndex+'_e'+local;
+  }
   return el.dataset.editKey;
 }
 function prepareEditable(){
-  textTargets().forEach(el=>{el.contentEditable=editMode?'true':'false'; makeKey(el);});
+  editableTargets().forEach(el=>{el.contentEditable=editMode?'true':'false'; if(!idxTextTargets().includes(el)) makeKey(el);});
 }
-function collectState(){const s={};textTargets().forEach(el=>{s[makeKey(el)]=el.innerHTML});return s;}
-function saveState(){saveDynamicState();try{localStorage.setItem(CLEAN_KEY,JSON.stringify(collectState()));showSaved();}catch(e){}}
-function loadState(){try{const s=JSON.parse(localStorage.getItem(CLEAN_KEY)||'{}')||{};textTargets().forEach(el=>{const k=makeKey(el);if(s[k]!=null)el.innerHTML=s[k];});}catch(e){}}
+function collectState(){const s={};baseTextTargets().forEach(el=>{s[makeKey(el)]=el.innerHTML});return s;}
+function saveState(){
+  saveDynamicState();
+  try{
+    localStorage.setItem(CLEAN_KEY,JSON.stringify(collectState()));
+    showSaved();
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const s=JSON.parse(localStorage.getItem(CLEAN_KEY)||'{}')||{};
+    baseTextTargets().forEach(el=>{const k=makeKey(el);if(s[k]!=null)el.innerHTML=s[k];});
+  }catch(e){}
+}
 function showSaved(){saveToast.classList.add('show');setTimeout(()=>saveToast.classList.remove('show'),900);}
+
+function openEditPass(){
+  editPassError.textContent='';
+  editPassInput.value='';
+  editPassOverlay.classList.add('open');
+  editPassOverlay.setAttribute('aria-hidden','false');
+  setTimeout(()=>editPassInput.focus(),40);
+}
+function closeEditPass(){
+  editPassOverlay.classList.remove('open');
+  editPassOverlay.setAttribute('aria-hidden','true');
+  editPassError.textContent='';
+}
+function confirmEditPass(){
+  if(editPassInput.value==='edit'){closeEditPass();setEditMode(true);return;}
+  editPassError.textContent='Parolă incorectă.';
+  editPassInput.select();
+}
+editPassCancel.onclick=closeEditPass;
+editPassConfirm.onclick=confirmEditPass;
+editPassOverlay.addEventListener('click',e=>{if(e.target===editPassOverlay)closeEditPass();});
+editPassInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();confirmEditPass();}if(e.key==='Escape'){e.preventDefault();closeEditPass();}});
+
 function setEditMode(v){editMode=v;document.body.classList.toggle('editable-on',editMode);editToggle.classList.toggle('active',editMode);editToggle.textContent=editMode?'✓':'✎';editToggle.title=editMode?'Salvează':'Editare';prepareEditable();}
-editToggle.onclick=e=>{e.stopPropagation();if(editMode){saveState();setEditMode(false);}else{setEditMode(true);}};
+editToggle.onclick=e=>{
+e.stopPropagation();
+if(editMode){saveState();setEditMode(false);return;}
+openEditPass();
+};
 
 document.addEventListener('keydown',e=>{const inEditable=e.target.closest&&e.target.closest('[contenteditable="true"]');if(inEditable){e.stopPropagation();return;}if(editMode){if(e.key==='Escape'){setEditMode(false);closeModal();}return;}if(['ArrowRight',' '].includes(e.key)){e.preventDefault();next()}if(e.key==='Enter'){e.preventDefault();next()}if(e.key==='ArrowLeft'){prev()}if(e.key==='Home'){show(0)}if(e.key.toLowerCase()==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}if(e.key==='Escape'){closeModal()}});
 
