@@ -1690,7 +1690,26 @@ h1{margin:0;font-size:clamp(38px,5vw,74px);line-height:.96;letter-spacing:-.055e
 <div class="modal" id="matModal"><button class="close" id="closeModal">×</button><div class="modal-card" id="modalCard"></div></div>
 <div class="edit-pass-overlay" id="editPassOverlay" aria-hidden="true"><div class="edit-pass-card" role="dialog" aria-modal="true" aria-labelledby="editPassTitle"><h2 class="edit-pass-title" id="editPassTitle">Acces editare</h2><p class="edit-pass-subtitle">Introdu parola pentru a activa editarea.</p><input class="edit-pass-input" id="editPassInput" type="password" autocomplete="off" placeholder="Parolă"/><div class="edit-pass-error" id="editPassError"></div><div class="edit-pass-actions"><button type="button" id="editPassCancel">Anulează</button><button type="button" class="confirm" id="editPassConfirm">Continuă</button></div></div></div>
 <div class="progress"><span id="progress"></span></div><div class="controls"><button class="edit-toggle" id="editToggle" title="Editare">✎</button><div class="nav"><button id="prev">‹</button><button id="home">⌂</button><button id="next">›</button></div></div><div class="save-toast" id="saveToast">Salvat</div><div class="hint">Taste: ← → Space Home F. Pe mobil poți glisa.</div>
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCD6OYEGWKVIrivTggKP_49XfNWaiAdyXI",
+  authDomain: "avvero-elearning.firebaseapp.com",
+  projectId: "avvero-elearning",
+  storageBucket: "avvero-elearning.firebasestorage.app",
+  messagingSenderId: "252918339340",
+  appId: "1:252918339340:web:ac235c6fccec5066651b29",
+  measurementId: "G-4HPWJT0LG8"
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const firestoreDb = getFirestore(firebaseApp);
+const syncRef = doc(firestoreDb, "avvero_elearning", "content_state");
+let cloudTextState = {};
+let pendingCloudState = null;
+let cloudReady = false;
+
 const slides=[...document.querySelectorAll('.slide')];
 const progress=document.getElementById('progress');
 const editToggle=document.getElementById('editToggle');
@@ -1744,8 +1763,21 @@ const idxData=[
 ];
 const tabs=[...document.querySelectorAll('#idxTabs button')];const el={num:document.getElementById('idxNumber'),text:document.getElementById('idxText'),pct:document.getElementById('thinPct'),bar:document.getElementById('thinBar'),diop:document.getElementById('idxDiop'),frame:document.getElementById('idxFrame'),mount:document.getElementById('idxMount'),care:document.getElementById('idxCare')};
 function updateIdxDataFromDom(){const d=idxData[currentIdx];if(!d)return;d.n=el.num.textContent.trim();d.text=el.text.textContent.trim();const pct=parseFloat((el.pct.textContent||'').replace('%',''));if(!Number.isNaN(pct))d.thin=pct;d.diop=el.diop.textContent.trim();d.frame=el.frame.textContent.trim();d.mount=el.mount.textContent.trim();d.care=el.care.textContent.trim();if(tabs[currentIdx])tabs[currentIdx].textContent=d.n;}
-function loadDynamicState(){try{const s=JSON.parse(localStorage.getItem(DYNAMIC_KEY)||'{}')||{};if(Array.isArray(s.idxData)){s.idxData.forEach((d,i)=>{if(idxData[i])Object.assign(idxData[i],d);});}}catch(e){}}
-function saveDynamicState(){updateIdxDataFromDom();try{localStorage.setItem(DYNAMIC_KEY,JSON.stringify({idxData}));}catch(e){}}
+function applyIdxData(data){
+  if(Array.isArray(data)){
+    data.forEach((d,i)=>{if(idxData[i]&&d)Object.assign(idxData[i],d);});
+  }
+}
+function loadDynamicState(){
+  try{
+    const s=JSON.parse(localStorage.getItem(DYNAMIC_KEY)||'{}')||{};
+    applyIdxData(s.idxData);
+  }catch(e){}
+}
+function saveDynamicState(){
+  updateIdxDataFromDom();
+  try{localStorage.setItem(DYNAMIC_KEY,JSON.stringify({idxData}));}catch(e){}
+}
 function setIdx(i){currentIdx=i;const d=idxData[i];tabs.forEach((b,j)=>{b.classList.toggle('active',j===i);if(idxData[j])b.textContent=idxData[j].n;});el.num.textContent=d.n;el.text.textContent=d.text;el.pct.textContent=d.thin+'%';el.bar.style.width=d.thin+'%';el.diop.textContent=d.diop;el.frame.textContent=d.frame;el.mount.textContent=d.mount;el.care.textContent=d.care;prepareEditable();}
 tabs.forEach(b=>b.onclick=()=>{updateIdxDataFromDom();setIdx(+b.dataset.i);});
 
@@ -1797,19 +1829,58 @@ function makeKey(el){
 function prepareEditable(){
   editableTargets().forEach(el=>{el.contentEditable=editMode?'true':'false'; if(!idxTextTargets().includes(el)) makeKey(el);});
 }
-function collectState(){const s={};baseTextTargets().forEach(el=>{s[makeKey(el)]=el.innerHTML});return s;}
-function saveState(){
+function collectState(){const s={...cloudTextState};baseTextTargets().forEach(el=>{s[makeKey(el)]=el.innerHTML});return s;}
+function applyTextState(state){
+  const s=state||{};
+  baseTextTargets().forEach(el=>{const k=makeKey(el);if(s[k]!=null)el.innerHTML=s[k];});
+}
+async function saveState(options={}){
   saveDynamicState();
+  const text=collectState();
+  cloudTextState={...text};
   try{
-    localStorage.setItem(CLEAN_KEY,JSON.stringify(collectState()));
-    showSaved();
+    localStorage.setItem(CLEAN_KEY,JSON.stringify(text));
+    localStorage.setItem(DYNAMIC_KEY,JSON.stringify({idxData}));
   }catch(e){}
+  try{
+    await setDoc(syncRef,{text,idxData,updatedAt:serverTimestamp()},{merge:true});
+    if(!options.silent)showSaved();
+  }catch(e){
+    console.error('Firestore save error',e);
+    if(!options.silent){saveToast.textContent='Salvat local';showSaved();setTimeout(()=>{saveToast.textContent='Salvat'},1000);}
+  }
 }
 function loadState(){
+  if(cloudTextState&&Object.keys(cloudTextState).length){applyTextState(cloudTextState);return;}
   try{
     const s=JSON.parse(localStorage.getItem(CLEAN_KEY)||'{}')||{};
-    baseTextTargets().forEach(el=>{const k=makeKey(el);if(s[k]!=null)el.innerHTML=s[k];});
+    cloudTextState={...s};
+    applyTextState(cloudTextState);
   }catch(e){}
+}
+function applyCloudData(data){
+  if(!data)return;
+  cloudTextState={...(data.text||{})};
+  if(Array.isArray(data.idxData)){
+    applyIdxData(data.idxData);
+    setIdx(currentIdx);
+  }
+  applyTextState(cloudTextState);
+}
+function initCloudSync(){
+  onSnapshot(syncRef,(snap)=>{
+    cloudReady=true;
+    if(!snap.exists()){
+      saveState({silent:true});
+      return;
+    }
+    const data=snap.data()||{};
+    if(editMode){pendingCloudState=data;return;}
+    applyCloudData(data);
+  },(err)=>{
+    console.error('Firestore sync error',err);
+    loadState();
+  });
 }
 function showSaved(){saveToast.classList.add('show');setTimeout(()=>saveToast.classList.remove('show'),900);}
 
@@ -1835,7 +1906,7 @@ editPassConfirm.onclick=confirmEditPass;
 editPassOverlay.addEventListener('click',e=>{if(e.target===editPassOverlay)closeEditPass();});
 editPassInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();confirmEditPass();}if(e.key==='Escape'){e.preventDefault();closeEditPass();}});
 
-function setEditMode(v){editMode=v;document.body.classList.toggle('editable-on',editMode);editToggle.classList.toggle('active',editMode);editToggle.textContent=editMode?'✓':'✎';editToggle.title=editMode?'Salvează':'Editare';prepareEditable();}
+function setEditMode(v){editMode=v;document.body.classList.toggle('editable-on',editMode);editToggle.classList.toggle('active',editMode);editToggle.textContent=editMode?'✓':'✎';editToggle.title=editMode?'Salvează':'Editare';prepareEditable();if(!editMode&&pendingCloudState){const data=pendingCloudState;pendingCloudState=null;applyCloudData(data);}}
 editToggle.onclick=e=>{
 e.stopPropagation();
 if(editMode){saveState();setEditMode(false);return;}
@@ -1860,7 +1931,7 @@ document.addEventListener('touchend',e=>{
   if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.35){dx<0?next():prev()}
 },{passive:true});
 
-loadDynamicState();setIdx(0);prepareEditable();loadState();show(0);
+loadDynamicState();setIdx(0);prepareEditable();loadState();show(0);initCloudSync();
 </script>
 </body>
 </html>
