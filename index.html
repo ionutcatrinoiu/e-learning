@@ -1580,6 +1580,39 @@ h1{margin:0;font-size:clamp(38px,5vw,74px);line-height:.96;letter-spacing:-.055e
   .modal-card .modal-grid{gap:10px!important;}
 }
 
+
+/* PATCH FINAL CERUT: doar mobil, popup materiale și spațiu header */
+@media (max-width:760px){
+  /* spațiu mai mare și egal între header și conținut */
+  .slide .topline{
+    margin-bottom:32px!important;
+  }
+  .slide .content{
+    margin-top:8px!important;
+  }
+
+  /* pagina 3, popup materiale: Rezistență rămâne în grupul de 4 câmpuri tehnice */
+  #matModal .modal-card .mobile-resistance{
+    display:block!important;
+    grid-column:auto!important;
+    min-height:96px!important;
+  }
+
+  /* câmpurile mari din popup rămân full width */
+  #matModal .modal-card .modal-item:nth-child(5),
+  #matModal .modal-card .modal-item:nth-child(6),
+  #matModal .modal-card .modal-item:nth-child(7),
+  #matModal .modal-card .modal-item:nth-child(8){
+    grid-column:1 / -1!important;
+    min-height:0!important;
+  }
+
+  /* Dezavantaje are aceeași lățime ca Utilizare și Avantaje */
+  #matModal .modal-card .modal-item:nth-child(8){
+    width:100%!important;
+  }
+}
+
 </style>
 </head>
 <body>
