@@ -1581,52 +1581,94 @@ h1{margin:0;font-size:clamp(38px,5vw,74px);line-height:.96;letter-spacing:-.055e
 }
 
 
-
-/* FIX FINAL MOBILE: pagina 1 lentilă + swipe pe indicii de refracție. Desktop neatins. */
+/* PATCH FINAL STRICT MOBILE: pagina 3 modal grupat, pagina 5 grafice restaurate, fără impact desktop */
 @media (max-width:760px){
-  .slide:nth-of-type(1){
-    padding-bottom:calc(190px + env(safe-area-inset-bottom))!important;
-  }
-  .slide:nth-of-type(1) .content{
-    overflow:visible!important;
-    gap:24px!important;
-  }
+  /* păstrează distanța clară dintre header și conținut */
+  .slide .topline{margin-bottom:26px!important;}
+  .slide .content{margin-top:8px!important;}
+
+  /* pagina 1, lentila nu se mai taie în animația de flotare */
   .slide:nth-of-type(1) .visual{
-    min-height:330px!important;
-    max-height:none!important;
-    height:330px!important;
     overflow:visible!important;
-    padding:24px 0!important;
-    margin-top:4px!important;
+    min-height:260px!important;
+    max-height:none!important;
+    padding:18px 0 22px!important;
   }
   .slide:nth-of-type(1) .lens{
     width:min(68vw,270px)!important;
     height:min(68vw,270px)!important;
-    max-width:270px!important;
-    max-height:270px!important;
-    overflow:visible!important;
-    animation:floatMobileSafe 5s ease-in-out infinite!important;
   }
-  .slide:nth-of-type(1) .lens:before{inset:32px!important;}
-  .slide:nth-of-type(1) .lens:after{inset:68px!important;}
-  .slide:nth-of-type(1) .ray{
-    width:82vw!important;
-    max-width:360px!important;
-  }
-  @keyframes floatMobileSafe{50%{transform:translateY(-10px)}}
 
-  .slide:nth-of-type(4) .select-tabs,
-  .slide:nth-of-type(4) #idxTabs{
-    touch-action:pan-x!important;
-    overscroll-behavior-x:contain!important;
-    overscroll-behavior-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    position:relative!important;
-    z-index:30!important;
+  /* pagina 3, popup materiale: primele 4 câmpuri în 2 x 2, restul pe rânduri întregi */
+  .modal-card .modal-grid{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:10px!important;
+    align-items:stretch!important;
   }
-  .slide:nth-of-type(4) #idxTabs button{
-    touch-action:manipulation!important;
+  .modal-card .modal-item{
+    width:auto!important;
+    min-width:0!important;
+    min-height:92px!important;
   }
+  .modal-card .modal-item:nth-child(1),
+  .modal-card .modal-item:nth-child(2),
+  .modal-card .modal-item:nth-child(3),
+  .modal-card .modal-item:nth-child(4){
+    grid-column:auto!important;
+  }
+  .modal-card .modal-item:nth-child(n+5){
+    grid-column:1 / -1!important;
+    min-height:0!important;
+  }
+  .modal-card .mobile-resistance{display:block!important;}
+  .modal-card .modal-item:nth-child(8){
+    min-height:0!important;
+    width:100%!important;
+  }
+
+  /* pagina 5, readuce graficele în format compact, cu spotul în lateral, nu sub grafic */
+  .slide:nth-of-type(5) .p5-card{
+    padding:14px!important;
+    border-radius:22px!important;
+    overflow:hidden!important;
+  }
+  .slide:nth-of-type(5) .p5-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 108px!important;
+    gap:10px!important;
+    align-items:center!important;
+  }
+  .slide:nth-of-type(5) .p5-rays{
+    width:100%!important;
+    height:132px!important;
+    min-width:0!important;
+    max-width:100%!important;
+    display:block!important;
+  }
+  .slide:nth-of-type(5) .p5-spot{
+    justify-self:end!important;
+    align-self:center!important;
+    width:108px!important;
+  }
+  .slide:nth-of-type(5) .p5-spot svg{
+    width:108px!important;
+    height:108px!important;
+    display:block!important;
+  }
+  .slide:nth-of-type(5) .p5-caption{
+    margin-top:10px!important;
+    font-size:13px!important;
+    line-height:1.28!important;
+    padding:10px 11px!important;
+  }
+}
+
+@media (max-width:390px){
+  .slide:nth-of-type(5) .p5-layout{grid-template-columns:minmax(0,1fr) 92px!important;}
+  .slide:nth-of-type(5) .p5-spot{width:92px!important;}
+  .slide:nth-of-type(5) .p5-spot svg{width:92px!important;height:92px!important;}
+  .slide:nth-of-type(5) .p5-rays{height:120px!important;}
 }
 
 </style>
@@ -1804,22 +1846,21 @@ document.addEventListener('keydown',e=>{const inEditable=e.target.closest&&e.tar
 
 function show(n){current=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,i)=>{s.classList.toggle('active',i===current);s.classList.toggle('prev',i<current);});progress.style.width=((current+1)/slides.length*100)+'%';}
 function next(){show(current+1)}function prev(){show(current-1)}document.getElementById('next').onclick=next;document.getElementById('prev').onclick=prev;document.getElementById('home').onclick=()=>show(0);
-let sx=0;document.addEventListener('touchstart',e=>sx=e.touches[0].clientX);document.addEventListener('touchend',e=>{if(editMode)return;let dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>45){dx<0?next():prev()}});
+let sx=0,sy=0,swipeBlocked=false;
+document.addEventListener('touchstart',e=>{
+  const t=e.target;
+  swipeBlocked=!!(t.closest&&t.closest('#idxTabs,.select-tabs,.modal,.controls,[contenteditable="true"]'));
+  sx=e.touches[0].clientX;
+  sy=e.touches[0].clientY;
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(editMode||swipeBlocked)return;
+  let dx=e.changedTouches[0].clientX-sx;
+  let dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.35){dx<0?next():prev()}
+},{passive:true});
 
 loadDynamicState();setIdx(0);prepareEditable();loadState();show(0);
 </script>
-
-<script>
-(function(){
-  const tabs = document.getElementById('idxTabs');
-  if(!tabs) return;
-  ['touchstart','touchmove','touchend','pointerdown','pointermove','pointerup'].forEach(type=>{
-    tabs.addEventListener(type, function(e){
-      e.stopPropagation();
-    }, {passive:true});
-  });
-})();
-</script>
-
 </body>
 </html>
