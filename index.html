@@ -1570,6 +1570,16 @@ h1{margin:0;font-size:clamp(38px,5vw,74px);line-height:.96;letter-spacing:-.055e
   .modal-item{grid-column:1 / -1!important;min-height:0!important;}
 }
 
+
+/* PATCH FINAL MOBILE, doar mobil: spațiu header, câmp Rezistență în popup, editare carduri */
+.mobile-resistance{display:none;}
+@media (max-width:760px){
+  .slide .topline{margin-bottom:18px!important;}
+  .slide .content{margin-top:4px!important;}
+  .modal-card .mobile-resistance{display:block;}
+  .modal-card .modal-grid{gap:10px!important;}
+}
+
 </style>
 </head>
 <body>
@@ -1618,7 +1628,17 @@ const materials=[
 ];
 const materialsGrid=document.getElementById('materialsGrid');const modal=document.getElementById('matModal');const modalCard=document.getElementById('modalCard');
 materials.forEach((m,i)=>{const d=document.createElement('div');d.className='mat';d.innerHTML=`<h3>${m.name} - ${m.idx}</h3><small>${m.desc}</small><div class="specs"><div class="spec">Abbe ${m.abbe}</div><div class="spec">Densitate ${m.dens}</div></div>`;d.onclick=()=>{if(editMode)return;openMat(i)};materialsGrid.appendChild(d)});
-function openMat(i){const m=materials[i];const card=document.querySelectorAll('.mat')[i];const title=card?.querySelector('h3')?.innerText?.trim()||`${m.name} - ${m.idx}`;const desc=card?.querySelector('small')?.innerText?.trim()||m.desc;const specs=[...(card?.querySelectorAll('.spec')||[])].map(x=>x.innerText.trim());const abbe=(specs.find(x=>x.toLowerCase().includes('abbe'))||`Abbe ${m.abbe}`).replace(/^Abbe\s*/i,'');const dens=(specs.find(x=>x.toLowerCase().includes('densitate'))||`Densitate ${m.dens}`).replace(/^Densitate\s*/i,'');modal.classList.remove('closing');modalCard.innerHTML=`<h1>${title}</h1><p class="subtitle">${desc}</p><div class="modal-grid"><div class="modal-item"><h3>Indice</h3><p class="note">${title.includes('-')?title.split('-').slice(1).join('-').trim():m.idx}</p></div><div class="modal-item"><h3>Valoare Abbe</h3><p class="note">${abbe}</p></div><div class="modal-item"><h3>Densitate</h3><p class="note">${dens}</p></div><div class="modal-item"><h3>Protecție UV</h3><p class="note">Alege filtrul UV potrivit pentru purtare zilnică și exterior.</p></div><div class="modal-item"><h3>Utilizare</h3><p class="note">Alegerea depinde de dioptrie, ramă, tratamente și risc mecanic.</p></div><div class="modal-item"><h3>Avantaje</h3><p class="note">${m.pros}</p></div><div class="modal-item"><h3>Dezavantaje</h3><p class="note">${m.cons}</p></div></div>`;modal.classList.add('open');prepareEditable();}
+function materialResistanceText(name){
+  const n=(name||'').toLowerCase();
+  if(n.includes('trivex')) return 'Foarte bună la impact. Potrivit pentru copii, sport și rame pe fir.';
+  if(n.includes('policarbonat')) return 'Excelentă la impact. Recomandat pentru protecție și siguranță.';
+  if(n.includes('mr 8')) return 'Bună mecanic. Potrivit pentru montaj pe fir și utilizare zilnică.';
+  if(n.includes('mr 10')) return 'Bună, dar necesită ramă aleasă corect și montaj fără tensiune.';
+  if(n.includes('1.74')) return 'Acceptabilă. Alege montaj atent și evită tensionarea lentilei.';
+  if(n.includes('sticlă')) return 'Rezistă bine la zgâriere, dar are risc de spargere la impact.';
+  return 'Standard pentru utilizare zilnică. Evită solicitările mari la impact.';
+}
+function openMat(i){const m=materials[i];const card=document.querySelectorAll('.mat')[i];const title=card?.querySelector('h3')?.innerText?.trim()||`${m.name} - ${m.idx}`;const desc=card?.querySelector('small')?.innerText?.trim()||m.desc;const specs=[...(card?.querySelectorAll('.spec')||[])].map(x=>x.innerText.trim());const abbe=(specs.find(x=>x.toLowerCase().includes('abbe'))||`Abbe ${m.abbe}`).replace(/^Abbe\s*/i,'');const dens=(specs.find(x=>x.toLowerCase().includes('densitate'))||`Densitate ${m.dens}`).replace(/^Densitate\s*/i,'');const rez=materialResistanceText(m.name);modal.classList.remove('closing');modalCard.dataset.materialIndex=i;modalCard.innerHTML=`<h1>${title}</h1><p class="subtitle">${desc}</p><div class="modal-grid"><div class="modal-item"><h3>Indice</h3><p class="note">${title.includes('-')?title.split('-').slice(1).join('-').trim():m.idx}</p></div><div class="modal-item"><h3>Valoare Abbe</h3><p class="note">${abbe}</p></div><div class="modal-item"><h3>Densitate</h3><p class="note">${dens}</p></div><div class="modal-item mobile-resistance"><h3>Rezistență</h3><p class="note">${rez}</p></div><div class="modal-item"><h3>Protecție UV</h3><p class="note">Alege filtrul UV potrivit pentru purtare zilnică și exterior.</p></div><div class="modal-item"><h3>Utilizare</h3><p class="note">Alegerea depinde de dioptrie, ramă, tratamente și risc mecanic.</p></div><div class="modal-item"><h3>Avantaje</h3><p class="note">${m.pros}</p></div><div class="modal-item"><h3>Dezavantaje</h3><p class="note">${m.cons}</p></div></div>`;modal.classList.add('open');prepareEditable();loadState();}
 function closeModal(){if(!modal.classList.contains('open'))return;modal.classList.add('closing');setTimeout(()=>{modal.classList.remove('open','closing')},220)}document.getElementById('closeModal').onclick=closeModal;modal.onclick=e=>{if(e.target===modal)closeModal()};
 let modalTouchStartY=null;let modalTouchMoveY=null;modalCard.addEventListener('touchstart',e=>{modalTouchStartY=e.touches[0].clientY;modalTouchMoveY=modalTouchStartY;},{passive:true});modalCard.addEventListener('touchmove',e=>{modalTouchMoveY=e.touches[0].clientY;const diff=modalTouchMoveY-modalTouchStartY;if(modalCard.scrollTop<=0&&diff>28){modalCard.style.transform=`translateY(${Math.min(diff,90)}px)`;}},{passive:true});modalCard.addEventListener('touchend',()=>{const diff=(modalTouchMoveY||0)-(modalTouchStartY||0);modalCard.style.transform='';if(modalCard.scrollTop<=0&&diff>85)closeModal();modalTouchStartY=null;modalTouchMoveY=null;});
 
@@ -1639,12 +1659,13 @@ function setIdx(i){currentIdx=i;const d=idxData[i];tabs.forEach((b,j)=>{b.classL
 tabs.forEach(b=>b.onclick=()=>{updateIdxDataFromDom();setIdx(+b.dataset.i);});
 
 function baseTextTargets(){
-  const selector='.slide h1,.slide h2,.slide h3,.slide h4,.slide p,.slide li,.slide span,.slide strong,.slide b,.slide small,.slide .spec,.slide .tag,.slide .p5-caption';
+  const selector='.slide h1,.slide h2,.slide h3,.slide h4,.slide p,.slide li,.slide span,.slide strong,.slide b,.slide small,.slide .spec,.slide .tag,.slide .p5-caption,#matModal h1,#matModal h3,#matModal p';
   const candidates=[...document.querySelectorAll(selector)].filter(el=>
     !el.closest('.controls') &&
     !el.closest('.nav') &&
     !el.closest('#saveToast') &&
     !el.closest('.progress') &&
+    !el.closest('#closeModal') &&
     !el.closest('#idxTabs') &&
     !el.classList.contains('counter') &&
     !['idxNumber','idxText','thinPct','idxDiop','idxFrame','idxMount','idxCare'].includes(el.id)
@@ -1667,10 +1688,18 @@ function editableTargets(){
 }
 function makeKey(el){
   if(!el.dataset.editKey){
-    const slide=el.closest('.slide');
-    const slideIndex=slide?[...slides].indexOf(slide)+1:0;
-    const local=[...document.querySelectorAll('.slide h1,.slide h2,.slide h3,.slide h4,.slide p,.slide li,.slide span,.slide strong,.slide b,.slide small,.slide .spec,.slide .tag,.slide .p5-caption')].indexOf(el);
-    el.dataset.editKey='s'+slideIndex+'_e'+local;
+    const modalScope=el.closest('#modalCard');
+    if(modalScope){
+      const modalIndex=modalScope.dataset.materialIndex||'x';
+      const modalSelector='#modalCard h1,#modalCard h3,#modalCard p';
+      const local=[...modalScope.querySelectorAll('h1,h3,p')].indexOf(el);
+      el.dataset.editKey='modal_m'+modalIndex+'_e'+local;
+    }else{
+      const slide=el.closest('.slide');
+      const slideIndex=slide?[...slides].indexOf(slide)+1:0;
+      const local=[...document.querySelectorAll('.slide h1,.slide h2,.slide h3,.slide h4,.slide p,.slide li,.slide span,.slide strong,.slide b,.slide small,.slide .spec,.slide .tag,.slide .p5-caption')].indexOf(el);
+      el.dataset.editKey='s'+slideIndex+'_e'+local;
+    }
   }
   return el.dataset.editKey;
 }
